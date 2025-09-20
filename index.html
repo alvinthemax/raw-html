@@ -1,0 +1,108 @@
+<!doctype html>
+
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tampilkan "Raw HTML" (Escaped + Render)</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7dd3fc;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; margin:24px; background:linear-gradient(180deg,#071025 0%, #07182a 100%); color:#e6eef8}
+    h1{font-size:18px;margin:0 0 12px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
+    textarea{width:100%;min-height:240px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;font-size:13px}
+    pre{white-space:pre-wrap;word-break:break-word;padding:12px;border-radius:8px;background:#001627;color:#dff6ff;overflow:auto;max-height:360px}
+    .controls{display:flex;gap:8px;margin-top:10px}
+    button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--accent)}
+    .preview{min-height:240px;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
+    .foot{font-size:12px;color:var(--muted);margin-top:10px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <h1>Viewer: tampilkan &quot;raw HTML&quot; dari kode HTML</h1>
+  <p class="foot">Gunakan kotak kiri untuk menempel (paste) kode HTML Anda. Klik <em>Show Raw</em> untuk melihat HTML yang sudah di-escape, atau <em>Render</em> untuk melihat hasil render sebenarnya.</p>  <div class="grid">
+    <div class="card">
+      <label for="source">Kode HTML (raw input)</label>
+      <textarea id="source">&lt;!doctype html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Contoh&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Halo dunia&lt;/h1&gt;
+    &lt;p&gt;Ini contoh HTML yang akan ditampilkan sebagai raw atau dirender.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</textarea><div class="controls">
+    <button id="btn-raw" title="Tampilkan sebagai teks yang sudah di-escape">Show Raw</button>
+    <button id="btn-render" title="Tampilkan sebagai HTML yang dirender">Render</button>
+    <button id="btn-copy" title="Salin teks raw (escaped) ke clipboard">Copy Raw</button>
+    <button id="btn-download" title="Download file .html dari input">Download .html</button>
+  </div>
+
+  <p class="foot">Tip: untuk menampilkan HTML sebagai teks di halaman lain, gunakan fungsi <code>textContent</code> atau escapekan karakter seperti &amp;lt; &amp;gt; &amp;amp;.</p>
+</div>
+
+<div class="card">
+  <label>Raw (escaped) output</label>
+  <pre id="raw" class="preview" aria-live="polite"></pre>
+
+  <label style="margin-top:10px;display:block">Live render</label>
+  <div id="rendered" class="preview"></div>
+</div>
+
+  </div>  <script>
+    const src = document.getElementById('source');
+    const raw = document.getElementById('raw');
+    const rendered = document.getElementById('rendered');
+    const btnRaw = document.getElementById('btn-raw');
+    const btnRender = document.getElementById('btn-render');
+    const btnCopy = document.getElementById('btn-copy');
+    const btnDownload = document.getElementById('btn-download');
+
+    function showRaw() {
+      // Set textContent to ensure HTML is escaped and shown as text
+      raw.textContent = src.value;
+    }
+
+    function doRender() {
+      // Render live HTML into the preview box
+      // We intentionally replace the innerHTML of the preview area.
+      rendered.innerHTML = src.value;
+    }
+
+    btnRaw.addEventListener('click', () => { showRaw(); src.focus(); });
+    btnRender.addEventListener('click', () => { doRender(); src.focus(); });
+
+    btnCopy.addEventListener('click', async () => {
+      try {
+        // copy escaped/raw text (so user can paste as visible HTML text somewhere)
+        await navigator.clipboard.writeText(raw.textContent || src.value);
+        btnCopy.textContent = 'Copied ✓';
+        setTimeout(()=>btnCopy.textContent = 'Copy Raw', 1200);
+      } catch (err) {
+        alert('Gagal menyalin ke clipboard: ' + err);
+      }
+    });
+
+    btnDownload.addEventListener('click', () => {
+      const blob = new Blob([src.value], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'snippet.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // Initialize with default
+    showRaw();
+    doRender();
+
+    // Optional: live-update raw when typing (uncomment if wanted)
+    // src.addEventListener('input', () => showRaw());
+  </script></body>
+</html>
