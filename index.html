@@ -23,10 +23,18 @@
     
     body {
       font-family: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      margin: 24px;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
       background: linear-gradient(180deg, #071025 0%, #07182a 100%);
       color: #e6eef8;
       line-height: 1.5;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
     }
     
     h1 {
@@ -47,6 +55,7 @@
       border-radius: 12px;
       box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
       position: relative;
+      overflow: hidden;
     }
     
     label {
@@ -69,6 +78,7 @@
       line-height: 1.4;
       resize: vertical;
       transition: border-color 0.2s;
+      max-width: 100%;
     }
     
     textarea:focus {
@@ -88,6 +98,7 @@
       font-family: ui-monospace, 'SFMono-Regular', Menlo, Monaco, 'Roboto Mono', monospace;
       font-size: 13px;
       line-height: 1.4;
+      max-width: 100%;
     }
     
     .controls {
@@ -109,6 +120,7 @@
       align-items: center;
       gap: 6px;
       transition: all 0.2s;
+      max-width: 100%;
     }
     
     button:hover {
@@ -128,10 +140,13 @@
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
       overflow: auto;
       position: relative;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     
     .preview-container {
       position: relative;
+      max-width: 100%;
     }
     
     .preview-controls {
@@ -164,7 +179,7 @@
       font-size: 0.9em;
     }
     
-    .fullscreen {
+    .fullscreen-mode {
       position: fixed;
       top: 0;
       left: 0;
@@ -174,12 +189,31 @@
       background: var(--bg);
       padding: 20px;
       overflow: auto;
+      box-sizing: border-box;
     }
     
-    .fullscreen .preview-controls {
+    .fullscreen-mode .preview-content {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: white;
+      color: black;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    
+    .fullscreen-controls {
       position: fixed;
       top: 16px;
       right: 16px;
+      z-index: 101;
+      display: flex;
+      gap: 8px;
+    }
+    
+    .fullscreen-controls button {
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
     }
     
     .icon {
@@ -188,13 +222,44 @@
       display: inline-block;
     }
     
+    /* Pencegahan overflow untuk konten yang di-render */
+    .rendered-content {
+      max-width: 100%;
+      overflow-wrap: break-word;
+    }
+    
+    .rendered-content img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .rendered-content table {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      display: block;
+    }
+    
+    .rendered-content iframe {
+      max-width: 100%;
+    }
+    
     @media (max-width: 900px) {
       .grid {
         grid-template-columns: 1fr;
       }
       
       body {
-        margin: 16px;
+        padding: 16px;
+      }
+      
+      .controls {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+        justify-content: center;
       }
     }
     
@@ -207,90 +272,141 @@
     .fade-in {
       animation: fadeIn 0.3s ease-in;
     }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
   </style>
 </head>
 <body>
-  <h1>Viewer: tampilkan "raw HTML" dari kode HTML</h1>
-  <p class="foot">Gunakan kotak kiri untuk menempel (paste) kode HTML Anda. Klik <em>Show Raw</em> untuk melihat HTML yang sudah di-escape, atau <em>Render</em> untuk melihat hasil render sebenarnya.</p>
-  
-  <div class="grid">
-    <div class="card">
-      <label for="source">Kode HTML (raw input)</label>
-      <textarea id="source" placeholder="Masukkan kode HTML di sini...">&lt;!doctype html&gt;
+  <div class="container">
+    <h1>Viewer: tampilkan "raw HTML" dari kode HTML</h1>
+    <p class="foot">Gunakan kotak kiri untuk menempel (paste) kode HTML Anda. Klik <em>Show Raw</em> untuk melihat HTML yang sudah di-escape, atau <em>Render</em> untuk melihat hasil render sebenarnya.</p>
+    
+    <div class="grid">
+      <div class="card">
+        <label for="source">Kode HTML (raw input)</label>
+        <textarea id="source" placeholder="Masukkan kode HTML di sini...">&lt;!doctype html&gt;
 &lt;html&gt;
   &lt;head&gt;
     &lt;title&gt;Contoh&lt;/title&gt;
     &lt;style&gt;
       body { font-family: Arial, sans-serif; margin: 40px; }
       h1 { color: #2563eb; }
+      .container { max-width: 800px; margin: 0 auto; }
+      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+      table, th, td { border: 1px solid #ddd; }
+      th, td { padding: 12px; text-align: left; }
     &lt;/style&gt;
   &lt;/head&gt;
   &lt;body&gt;
-    &lt;h1&gt;Halo dunia&lt;/h1&gt;
-    &lt;p&gt;Ini contoh HTML yang akan ditampilkan sebagai raw atau dirender.&lt;/p&gt;
-    &lt;ul&gt;
-      &lt;li&gt;Item 1&lt;/li&gt;
-      &lt;li&gt;Item 2&lt;/li&gt;
-      &lt;li&gt;Item 3&lt;/li&gt;
-    &lt;/ul&gt;
+    &lt;div class="container"&gt;
+      &lt;h1&gt;Halo dunia&lt;/h1&gt;
+      &lt;p&gt;Ini contoh HTML yang akan ditampilkan sebagai raw atau dirender.&lt;/p&gt;
+      &lt;ul&gt;
+        &lt;li&gt;Item 1&lt;/li&gt;
+        &lt;li&gt;Item 2&lt;/li&gt;
+        &lt;li&gt;Item 3&lt;/li&gt;
+      &lt;/ul&gt;
+      
+      &lt;h2&gt;Contoh Tabel&lt;/h2&gt;
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;Nama&lt;/th&gt;
+            &lt;th&gt;Email&lt;/th&gt;
+            &lt;th&gt;Peran&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;John Doe&lt;/td&gt;
+            &lt;td&gt;john@example.com&lt;/td&gt;
+            &lt;td&gt;Admin&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;Jane Smith&lt;/td&gt;
+            &lt;td&gt;jane@example.com&lt;/td&gt;
+            &lt;td&gt;User&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
   &lt;/body&gt;
 &lt;/html&gt;</textarea>
-      
-      <div class="controls">
-        <button id="btn-raw" title="Tampilkan sebagai teks yang sudah di-escape">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M6 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"></path>
-            <path d="M10 9h4v6h-4V9z"></path>
-          </svg>
-          Show Raw
-        </button>
-        <button id="btn-render" title="Tampilkan sebagai HTML yang dirender">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          Render
-        </button>
-        <button id="btn-copy" title="Salin teks raw (escaped) ke clipboard">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-          Copy Raw
-        </button>
-        <button id="btn-download" title="Download file .html dari input">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Download .html
-        </button>
+        
+        <div class="controls">
+          <button id="btn-raw" title="Tampilkan sebagai teks yang sudah di-escape">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"></path>
+              <path d="M10 9h4v6h-4V9z"></path>
+            </svg>
+            Show Raw
+          </button>
+          <button id="btn-render" title="Tampilkan sebagai HTML yang dirender">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Render
+          </button>
+          <button id="btn-copy" title="Salin teks raw (escaped) ke clipboard">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Raw
+          </button>
+          <button id="btn-download" title="Download file .html dari input">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download .html
+          </button>
+        </div>
+
+        <p class="foot">Tip: untuk menampilkan HTML sebagai teks di halaman lain, gunakan fungsi <code>textContent</code> atau escapekan karakter seperti &amp;lt; &amp;gt; &amp;amp;.</p>
       </div>
 
-      <p class="foot">Tip: untuk menampilkan HTML sebagai teks di halaman lain, gunakan fungsi <code>textContent</code> atau escapekan karakter seperti &amp;lt; &amp;gt; &amp;amp;.</p>
-    </div>
+      <div class="card">
+        <label>Raw (escaped) output</label>
+        <pre id="raw" class="preview" aria-live="polite"></pre>
 
-    <div class="card">
-      <label>Raw (escaped) output</label>
-      <pre id="raw" class="preview" aria-live="polite"></pre>
-
-      <label style="margin-top: 16px; display: block">Live render</label>
-      <div class="preview-container">
-        <div id="rendered" class="preview"></div>
-        <div class="preview-controls">
-          <button id="btn-fullscreen" title="Buka fullscreen">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-            </svg>
-          </button>
-          <button id="btn-refresh" title="Refresh render">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <polyline points="1 20 1 14 7 14"></polyline>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-          </button>
+        <label style="margin-top: 16px; display: block">Live render</label>
+        <div class="preview-container">
+          <div id="rendered" class="preview"></div>
+          <div class="preview-controls">
+            <button id="btn-fullscreen" title="Buka fullscreen">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+            </button>
+            <button id="btn-refresh" title="Refresh render">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -308,6 +424,7 @@
     const btnRefresh = document.getElementById('btn-refresh');
 
     let isFullscreen = false;
+    let fullscreenElement = null;
 
     function showRaw() {
       // Set textContent to ensure HTML is escaped and shown as text
@@ -319,7 +436,7 @@
     function doRender() {
       // Render live HTML into the preview box
       // We intentionally replace the innerHTML of the preview area.
-      rendered.innerHTML = src.value;
+      rendered.innerHTML = '<div class="rendered-content">' + src.value + '</div>';
       rendered.classList.add('fade-in');
       setTimeout(() => rendered.classList.remove('fade-in'), 300);
     }
@@ -327,9 +444,16 @@
     function toggleFullscreen() {
       if (!isFullscreen) {
         // Masuk ke mode fullscreen
-        const clone = rendered.cloneNode(true);
-        clone.classList.add('fullscreen');
-        document.body.appendChild(clone);
+        isFullscreen = true;
+        
+        // Buat elemen fullscreen
+        fullscreenElement = document.createElement('div');
+        fullscreenElement.className = 'fullscreen-mode';
+        
+        // Buat konten untuk fullscreen
+        const content = document.createElement('div');
+        content.className = 'preview-content';
+        content.innerHTML = src.value;
         
         // Buat tombol close
         const closeBtn = document.createElement('button');
@@ -338,23 +462,31 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
+          Tutup
         `;
         closeBtn.title = "Tutup fullscreen";
-        closeBtn.style.position = 'fixed';
-        closeBtn.style.top = '16px';
-        closeBtn.style.right = '16px';
-        closeBtn.style.zIndex = '101';
         closeBtn.addEventListener('click', toggleFullscreen);
         
-        clone.appendChild(closeBtn);
-        isFullscreen = true;
+        // Tambahkan kontrol ke fullscreen
+        const controls = document.createElement('div');
+        controls.className = 'fullscreen-controls';
+        controls.appendChild(closeBtn);
+        
+        // Tambahkan elemen ke DOM
+        fullscreenElement.appendChild(controls);
+        fullscreenElement.appendChild(content);
+        document.body.appendChild(fullscreenElement);
+        
+        // Prevent scrolling on body when in fullscreen
+        document.body.style.overflow = 'hidden';
       } else {
         // Keluar dari mode fullscreen
-        const fullscreenElem = document.querySelector('.fullscreen');
-        if (fullscreenElem) {
-          document.body.removeChild(fullscreenElem);
+        if (fullscreenElement) {
+          document.body.removeChild(fullscreenElement);
+          fullscreenElement = null;
         }
         isFullscreen = false;
+        document.body.style.overflow = '';
       }
     }
 
@@ -372,10 +504,11 @@
       try {
         // copy escaped/raw text (so user can paste as visible HTML text somewhere)
         await navigator.clipboard.writeText(raw.textContent || src.value);
-        btnCopy.textContent = 'Copied ✓';
+        const originalText = btnCopy.innerHTML;
+        btnCopy.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"></path></svg> Copied ✓';
         btnCopy.style.color = 'var(--success)';
         setTimeout(() => {
-          btnCopy.textContent = 'Copy Raw';
+          btnCopy.innerHTML = originalText;
           btnCopy.style.color = 'var(--accent)';
         }, 1200);
       } catch (err) {
@@ -404,6 +537,13 @@
     // Live update saat mengetik
     src.addEventListener('input', () => {
       showRaw();
+    });
+
+    // Handle Escape key to exit fullscreen
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        toggleFullscreen();
+      }
     });
 
     // Initialize with default
