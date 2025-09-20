@@ -491,7 +491,7 @@
   
   <script>
 /* =========================================================
-   1. Auto load ethers.js (kalau belum ada)
+   1. Auto load ethers.js (EVM) kalau belum ada
 ========================================================= */
 (function loadEthersIfNeeded() {
   if (typeof ethers === "undefined") {
@@ -690,7 +690,7 @@ window.addEventListener("message", async (event) => {
   };
 
   try {
-    // ====== EVM Wallet (MetaMask / OKX) ======
+    /* ===== EVM Wallet (MetaMask / OKX) ===== */
     if (action === "connect") {
       await waitForEthers();
       if (!window.ethereum) throw new Error("Wallet tidak terdeteksi");
@@ -740,7 +740,7 @@ window.addEventListener("message", async (event) => {
       return;
     }
 
-    // ====== Solana Wallet (Phantom) ======
+    /* ===== Solana Wallet (Phantom) ===== */
     if (action === "solana_connect") {
       if (!window.solana || !window.solana.isPhantom) {
         reply("wallet_error", "Phantom tidak terdeteksi di parent");
@@ -755,7 +755,45 @@ window.addEventListener("message", async (event) => {
       return;
     }
 
-    // Unknown
+    if (action === "solana_switch") {
+      // Phantom tidak support programmatic switch, hanya beri info
+      reply("solana_switched", "Silakan ubah network ke Testnet di setting Phantom.");
+      return;
+    }
+
+    if (action === "solana_sendTx") {
+      try {
+        if (!window.solana || !window.solana.isPhantom) throw new Error("Phantom tidak terdeteksi.");
+        const provider = window.solana;
+        await provider.connect();
+
+        // import web3.js
+        const solanaWeb3 = await import("https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.3/lib/index.iife.min.js");
+
+        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("testnet"), "confirmed");
+        const pubkey = provider.publicKey;
+
+        const tx = new solanaWeb3.Transaction().add(
+          solanaWeb3.SystemProgram.transfer({
+            fromPubkey: pubkey,
+            toPubkey: new solanaWeb3.PublicKey(params.to),
+            lamports: params.amount * solanaWeb3.LAMPORTS_PER_SOL,
+          })
+        );
+
+        tx.feePayer = pubkey;
+        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+        const signedTx = await provider.signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signedTx.serialize());
+        reply("solana_tx", { signature: sig });
+      } catch (err) {
+        reply("wallet_error", err.message || String(err));
+      }
+      return;
+    }
+
+    /* ===== Unknown ===== */
     reply("wallet_error", "Action tidak dikenal: " + action);
   } catch (err) {
     reply("wallet_error", err.message || String(err));
