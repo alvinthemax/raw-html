@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tampilkan "Raw HTML" (Escaped + Render)</title>
   <style>
+    /* CSS untuk aplikasi utama */
     :root {
       --bg: #0f1724;
       --card: #0b1220;
@@ -185,20 +186,10 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 100;
-      background: var(--bg);
-      padding: 20px;
-      overflow: auto;
-      box-sizing: border-box;
-    }
-    
-    .fullscreen-mode .preview-content {
-      width: 100%;
-      height: 100%;
-      overflow: auto;
+      z-index: 1000;
       background: white;
-      color: black;
       padding: 20px;
+      overflow: auto;
       box-sizing: border-box;
     }
     
@@ -206,7 +197,7 @@
       position: fixed;
       top: 16px;
       right: 16px;
-      z-index: 101;
+      z-index: 1001;
       display: flex;
       gap: 8px;
     }
@@ -214,12 +205,32 @@
     .fullscreen-controls button {
       background: rgba(0, 0, 0, 0.7);
       color: white;
+      z-index: 1002;
     }
     
     .icon {
       width: 14px;
       height: 14px;
       display: inline-block;
+    }
+    
+    /* Isolasi untuk konten yang di-render */
+    #rendered {
+      all: initial;
+      display: block;
+      min-height: 240px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      overflow: auto;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    
+    #rendered * {
+      all: revert;
+      box-sizing: border-box;
     }
     
     /* Pencegahan overflow untuk konten yang di-render */
@@ -307,18 +318,68 @@
   &lt;head&gt;
     &lt;title&gt;Contoh&lt;/title&gt;
     &lt;style&gt;
-      body { font-family: Arial, sans-serif; margin: 40px; }
-      h1 { color: #2563eb; }
-      .container { max-width: 800px; margin: 0 auto; }
-      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-      table, th, td { border: 1px solid #ddd; }
-      th, td { padding: 12px; text-align: left; }
+      body { 
+        font-family: Arial, sans-serif; 
+        margin: 40px; 
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      h1 { 
+        color: #2563eb; 
+        border-bottom: 2px solid #2563eb;
+        padding-bottom: 10px;
+      }
+      .container { 
+        max-width: 800px; 
+        margin: 0 auto; 
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin: 20px 0; 
+      }
+      table, th, td { 
+        border: 1px solid #ddd; 
+      }
+      th, td { 
+        padding: 12px; 
+        text-align: left; 
+      }
+      th {
+        background-color: #f0f0f0;
+      }
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      .btn {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #2563eb;
+        color: white;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-top: 10px;
+      }
+      .btn:hover {
+        background: #1d4ed8;
+      }
     &lt;/style&gt;
   &lt;/head&gt;
   &lt;body&gt;
     &lt;div class="container"&gt;
       &lt;h1&gt;Halo dunia&lt;/h1&gt;
       &lt;p&gt;Ini contoh HTML yang akan ditampilkan sebagai raw atau dirender.&lt;/p&gt;
+      
+      &lt;button id="demoBtn" class="btn"&gt;Klik Saya!&lt;/button&gt;
+      
+      &lt;div id="output" style="margin-top: 20px; padding: 10px; background: #f0f9ff; border-radius: 4px; display: none;"&gt;
+        Tombol telah diklik! JavaScript berfungsi dengan baik.
+      &lt;/div&gt;
+      
       &lt;ul&gt;
         &lt;li&gt;Item 1&lt;/li&gt;
         &lt;li&gt;Item 2&lt;/li&gt;
@@ -347,7 +408,23 @@
           &lt;/tr&gt;
         &lt;/tbody&gt;
       &lt;/table&gt;
+      
+      &lt;a href="#" class="btn"&gt;Contoh Tombol&lt;/a&gt;
     &lt;/div&gt;
+    
+    &lt;script&gt;
+      // Script demo untuk menunjukkan JavaScript bekerja
+      document.addEventListener('DOMContentLoaded', function() {
+        var demoBtn = document.getElementById('demoBtn');
+        var output = document.getElementById('output');
+        
+        if (demoBtn && output) {
+          demoBtn.addEventListener('click', function() {
+            output.style.display = output.style.display === 'none' ? 'block' : 'none';
+          });
+        }
+      });
+    &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;</textarea>
         
@@ -435,8 +512,57 @@
 
     function doRender() {
       // Render live HTML into the preview box
-      // We intentionally replace the innerHTML of the preview area.
-      rendered.innerHTML = '<div class="rendered-content">' + src.value + '</div>';
+      // Reset styles untuk isolasi CSS
+      rendered.setAttribute('style', 'all:initial; display:block; min-height:240px; padding:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); overflow:auto; max-width:100%; box-sizing:border-box;');
+      
+      // Buat iframe untuk isolasi CSS dan JavaScript yang lebih baik
+      rendered.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.style.borderRadius = '8px';
+      iframe.style.background = 'white';
+      
+      // Tambahkan sandbox attribute untuk keamanan, tetapi izinkan script
+      iframe.sandbox = 'allow-scripts allow-same-origin';
+      
+      // Tambahkan event listener untuk menunggu iframe load
+      iframe.onload = function() {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <base target="_blank">
+              <style>
+                body {
+                  margin: 0;
+                  padding: 0;
+                }
+              </style>
+            </head>
+            <body>${src.value}</body>
+          </html>
+        `);
+        iframeDoc.close();
+        
+        // Izinkan JavaScript dalam iframe untuk mengakses properti tertentu
+        try {
+          iframe.contentWindow.addEventListener('click', function(e) {
+            // Tangani klik pada link di iframe
+            if (e.target.tagName === 'A' && e.target.href) {
+              e.preventDefault();
+              window.open(e.target.href, '_blank');
+            }
+          });
+        } catch (e) {
+          console.log('Security restriction:', e);
+        }
+      };
+      
+      rendered.appendChild(iframe);
       rendered.classList.add('fade-in');
       setTimeout(() => rendered.classList.remove('fade-in'), 300);
     }
@@ -450,10 +576,15 @@
         fullscreenElement = document.createElement('div');
         fullscreenElement.className = 'fullscreen-mode';
         
-        // Buat konten untuk fullscreen
-        const content = document.createElement('div');
-        content.className = 'preview-content';
-        content.innerHTML = src.value;
+        // Buat iframe untuk konten
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = 'calc(100% - 20px)';
+        iframe.style.border = 'none';
+        iframe.style.marginTop = '20px';
+        
+        // Tambahkan sandbox attribute untuk keamanan, tetapi izinkan script
+        iframe.sandbox = 'allow-scripts allow-same-origin';
         
         // Buat tombol close
         const closeBtn = document.createElement('button');
@@ -474,8 +605,41 @@
         
         // Tambahkan elemen ke DOM
         fullscreenElement.appendChild(controls);
-        fullscreenElement.appendChild(content);
+        fullscreenElement.appendChild(iframe);
         document.body.appendChild(fullscreenElement);
+        
+        // Isi iframe dengan konten
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <base target="_blank">
+              <style>
+                body {
+                  margin: 0;
+                  padding: 20px;
+                }
+              </style>
+            </head>
+            <body>${src.value}</body>
+          </html>
+        `);
+        iframeDoc.close();
+        
+        // Izinkan JavaScript dalam iframe untuk mengakses properti tertentu
+        try {
+          iframe.contentWindow.addEventListener('click', function(e) {
+            // Tangani klik pada link di iframe
+            if (e.target.tagName === 'A' && e.target.href) {
+              e.preventDefault();
+              window.open(e.target.href, '_blank');
+            }
+          });
+        } catch (e) {
+          console.log('Security restriction:', e);
+        }
         
         // Prevent scrolling on body when in fullscreen
         document.body.style.overflow = 'hidden';
