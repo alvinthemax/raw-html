@@ -868,6 +868,12 @@ if (type === 'add_network') {
   return;
 }
 
+    // Unknown type -> ignore
+  } catch (err) {
+    console.warn('Error handling message from iframe', err);
+  }
+});
+
 // --- Wire up UI events ---
 btnRaw.addEventListener('click', () => { showRaw(); src.focus(); });
 btnRender.addEventListener('click', () => { doRender(); src.focus(); });
